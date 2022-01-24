@@ -21,8 +21,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.DeviceStatusHolder> {
-    List<Device> deviceList = new ArrayList<>();
-    MqttAndroidClient client = null;
+    List<Device> deviceList;
+    MqttAndroidClient client;
     public DeviceAdapter(List<Device> deviceList,MqttAndroidClient client) {
         this.deviceList = deviceList;
         this.client =client;
@@ -45,13 +45,11 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.DeviceStat
     public class DeviceStatusHolder extends RecyclerView.ViewHolder{
         public TextView tvDevice;
         public ImageView ivStatus;
-        public Device dv;
 
         public DeviceStatusHolder(View itemView) {
             super(itemView);
             tvDevice = itemView.findViewById(R.id.tvDeviceName);
             ivStatus = itemView.findViewById(R.id.ivStatus);
-
         }
 
         public void setData(final Device data,int position) {
@@ -68,13 +66,12 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.DeviceStat
         }
 
         private void pushStatus(Device data, int position) {
-            String topic = "linh/test";
             String payload = Integer.toString(position)+","+data.getStatusDevice();
             byte[] encodedPayload = new byte[0];
             try {
                 encodedPayload = payload.getBytes("UTF-8");
                 MqttMessage message = new MqttMessage(encodedPayload);
-                client.publish(topic, message);
+                client.publish(MainActivity.topic, message);
             } catch (UnsupportedEncodingException | MqttException e) {
                 e.printStackTrace();
             }
