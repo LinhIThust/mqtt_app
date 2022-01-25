@@ -1,16 +1,21 @@
 package com.example.mqtt_smarthome;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.app.Dialog;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.view.Window;
 import android.widget.Button;
 import android.widget.EditText;
+
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import org.eclipse.paho.android.service.MqttAndroidClient;
 import org.eclipse.paho.client.mqttv3.IMqttActionListener;
@@ -23,7 +28,7 @@ import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements View.OnClickListener {
     private static final String TAG  = "xxx";
     MqttAndroidClient client = null;
     DeviceAdapter deviceAdapter;
@@ -31,6 +36,8 @@ public class MainActivity extends AppCompatActivity {
     List<Device> listDevice = new ArrayList<>();
     EditText etTopic,etNumber;
     Button btTest;
+    FloatingActionButton fabAddDevice;
+    Dialog dialog;
     public static String topic;
     private Integer numberDevice;
     SharedPreferences sharedPref;
@@ -45,15 +52,14 @@ public class MainActivity extends AppCompatActivity {
         etTopic =findViewById(R.id.etTopic);
         etNumber =findViewById(R.id.etNumber);
         btTest =findViewById(R.id.btTest);
-        btTest.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                saveConfig();
-            }
-        });
-        recyclerView =findViewById(R.id.recyclerView);
-        LinearLayoutManager manager = new LinearLayoutManager(this);
-        recyclerView.setLayoutManager(manager);
+        fabAddDevice =findViewById(R.id.fabAddDevice);
+        btTest.setOnClickListener(this);
+        fabAddDevice.setOnClickListener(this);
+
+        dialog = new Dialog(this);
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        dialog.setContentView(R.layout.dialog_add_device);
+
         String clientId = MqttClient.generateClientId();
         client= new MqttAndroidClient(this.getApplicationContext(), "tcp://broker.hivemq.com:1883",clientId);
         try {
@@ -72,24 +78,69 @@ public class MainActivity extends AppCompatActivity {
         } catch (MqttException e) {
             e.printStackTrace();
         }
+
         getConfig();
-        listDevice.add(0,new Device("Helo",true));
-        listDevice.add(1,new Device("Helo",true));
-        listDevice.add(2,new Device("Helo",true));
+
+
+        recyclerView =findViewById(R.id.recyclerView);
+        GridLayoutManager manager=new GridLayoutManager(this,3);
+        recyclerView.setLayoutManager(manager);
         deviceAdapter = new DeviceAdapter(listDevice,client);
         recyclerView.setAdapter(deviceAdapter);
     }
 
     private void saveConfig() {
         editor.putString("topic", etTopic.getText().toString());
-        editor.putInt("number", Integer.parseInt(etNumber.getText().toString()));
+//        editor.putInt("number", Integer.parseInt(etNumber.getText().toString()));
         editor.commit();
+        getConfig();
     }
 
     private void getConfig() {
         topic = sharedPref.getString("topic", "");
         numberDevice = sharedPref.getInt("number", 0);
+        if(numberDevice>0){
+            for (int i = 1  ; i <= numberDevice ; i++) {
+                listDevice.add(new Device(sharedPref.getString("device"+i,""),false));
+            }
+        }
         etTopic.setText(topic);
         etNumber.setText(numberDevice+"");
+    }
+
+    @Override
+    public void onClick(View view) {
+        switch (view.getId()){
+            case R.id.btTest:
+                saveConfig();
+                break;
+            case R.id.fabAddDevice:
+                Log.d(TAG, "onClick: fabAddDevice");
+                openDialog();
+                break;
+        }
+    }
+
+    private void openDialog() {
+        EditText etNameDevice = dialog.findViewById(R.id.etNameDevice);
+        Button btSaveDevice =dialog.findViewById(R.id.btSaveDevice);
+        int index =listDevice.size()+1;
+        etNameDevice.setText("Thiết bị "+index);
+        dialog.show();
+        btSaveDevice.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                String nameDevice = etNameDevice.getText().toString();
+                listDevice.add(new Device(nameDevice,false));
+                Log.d(TAG, "onClick: Add new device: "+listDevice.size());
+                editor.putString("device"+listDevice.size(), nameDevice);
+                editor.putInt("number",listDevice.size());
+                etNumber.setText(listDevice.size()+"");
+                editor.commit();
+                deviceAdapter.notifyDataSetChanged();
+                int index =listDevice.size()+1;
+                etNameDevice.setText("Thiết bị "+index);
+            }
+        });
     }
 }
