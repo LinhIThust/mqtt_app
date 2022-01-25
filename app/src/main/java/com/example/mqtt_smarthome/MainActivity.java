@@ -83,7 +83,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
 
         recyclerView =findViewById(R.id.recyclerView);
-        GridLayoutManager manager=new GridLayoutManager(this,3);
+        GridLayoutManager manager=new GridLayoutManager(this,2);
         recyclerView.setLayoutManager(manager);
         deviceAdapter = new DeviceAdapter(listDevice,client);
         recyclerView.setAdapter(deviceAdapter);
