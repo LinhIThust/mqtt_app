@@ -41,7 +41,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public static String topic;
     private Integer numberDevice;
     SharedPreferences sharedPref;
-    SharedPreferences.Editor editor;
+    public static SharedPreferences.Editor editor;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -101,7 +101,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         numberDevice = sharedPref.getInt("number", 0);
         if(numberDevice>0){
             for (int i = 1  ; i <= numberDevice ; i++) {
-                listDevice.add(new Device(sharedPref.getString("device"+i,""),false));
+                listDevice.add(new Device(sharedPref.getString("device"+i,""),sharedPref.getBoolean("deviceStatus"+i,false)));
             }
         }
         etTopic.setText(topic);

@@ -1,5 +1,7 @@
 package com.example.mqtt_smarthome;
 
+import static com.example.mqtt_smarthome.MainActivity.editor;
+
 import android.annotation.SuppressLint;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -60,6 +62,9 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.DeviceStat
                 public void onClick(View view) {
                     chooseImage(!data.getStatusDevice());
                     data.setStatusDevice(!data.getStatusDevice());
+                    int index =position+1;
+                    editor.putBoolean("deviceStatus"+index,data.getStatusDevice());
+                    editor.commit();
                     pushStatus(data,position);
                 }
             });
@@ -71,7 +76,7 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.DeviceStat
             try {
                 encodedPayload = payload.getBytes("UTF-8");
                 MqttMessage message = new MqttMessage(encodedPayload);
-                client.publish(MainActivity.topic, message);
+                client.publish(MainActivity.topic+position, message);
             } catch (UnsupportedEncodingException | MqttException e) {
                 e.printStackTrace();
             }
